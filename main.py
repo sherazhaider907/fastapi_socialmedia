@@ -22,6 +22,7 @@ def find_post(id):
     for p in my_posts:
         if p['id'] == id:
             return p
+        
 
 
 @app.get("/")
