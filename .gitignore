@@ -1,0 +1,64 @@
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment Variables
+.env
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Logs
+*.log
+
+# Database
+*.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build Files
+build/
+dist/
+*.egg-info/
+
+# Mypy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# FastAPI Uploaded Files (optional)
+uploads/
+
+# Alembic
+alembic/versions/*.pyc
+
+# Node Modules (if frontend exists)
+node_modules/
+
+# Static files cache
+staticfiles/
+
+# Docker
+*.pid
+
+# Jupyter
+.ipynb_checkpoints/
