@@ -5,6 +5,9 @@ from fastapi import Body
 from pydantic import BaseModel
 
 from random import randrange
+import time
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
 
@@ -13,7 +16,23 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: Optional[int] = None
+
+while True:
+    try:
+        conn = psycopg2.connect(
+            host='localhost',
+            database='fastapi',
+            user='postgres', 
+            password='admin', 
+            cursor_factory= RealDictCursor
+            )
+        cursor = conn.cursor()
+        print("Database connection was successful")
+        break
+    except Exception as error:
+        print("Database connection failed")
+        print("Error: ", error)
+        time.sleep(2)
 
 my_posts = [{"title": "post 1", "content": "content of post 1", "published": True, "rating": 5, "id": 1},
             {"title": "post 2", "content": "content of post 2", "published": False, "id": 2}]
@@ -35,15 +54,18 @@ async def root():
 
 @app.get("/posts")
 async def get_posts():
-    return {"data":my_posts}
+    cursor.execute(""" SELECT * FROM posts """)
+    posts = cursor.fetchall()
+    return {"data": posts}
 
 
 @app.post("/posts",status_code=status.HTTP_201_CREATED)
 async def create_post(post: Post):
-    post_dict = post.dict()
-    post_dict['id'] = randrange(0, 1000000)
-    my_posts.append(post_dict)
-    return {"data": post_dict}
+    cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, 
+                    (post.title, post.content, post.published))
+    new_post = cursor.fetchone()
+    conn.commit()
+    return {"data": new_post}
 
 @app.get("/posts/{id}")
 async def get_post(id: int):
