@@ -1,121 +1,48 @@
-from typing import Annotated, Optional
+from typing import Annotated, List
 
-from fastapi import FastAPI, Response, status, HTTPException , Depends # Depends is for dependency injection (like getting DB session)
-from fastapi import Body
-from pydantic import BaseModel
+from fastapi import FastAPI, Response, status, HTTPException, Depends
+from sqlalchemy.orm import Session
 
-from random import randrange
-import time
-import psycopg2
-from psycopg2.extras import RealDictCursor
+from . import models, schemas
+from .database import engine, get_db
 
-from . import models
-from .database import engine , get_db
-from sqlalchemy.orm import Session # This is for SQLAlchemy session management
-
-
+# Create tables
 models.Base.metadata.create_all(bind=engine)
 
-# Create FastAPI app instance
+# App instance
 app = FastAPI()
 
+# DB dependency shortcut
 db_dependency = Annotated[Session, Depends(get_db)]
 
 
-
-
-# Define data model for request body (Post structure)
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-
-
-# Keep trying to connect to PostgreSQL database until successful
-while True:
-    try:
-        conn = psycopg2.connect(
-            host='localhost',
-            database='fastapi',
-            user='postgres', 
-            password='admin', 
-            cursor_factory=RealDictCursor
-        )
-        cursor = conn.cursor()
-        print("Database connection was successful")
-        break
-
-    except Exception as error:
-        print("Database connection failed")
-        print("Error: ", error)
-        time.sleep(2)
-
-
-# Sample in-memory posts (not used in DB operations here)
-my_posts = [
-    {"title": "post 1", "content": "content of post 1", "published": True, "rating": 5, "id": 1},
-    {"title": "post 2", "content": "content of post 2", "published": False, "id": 2}
-]
-
-
-# Find a post by ID from in-memory list
-def find_post(id):
-    for p in my_posts:
-        if p['id'] == id:
-            return p
-
-
-# Find index of a post in in-memory list
-def find_index_post(id):
-    for i, p in enumerate(my_posts):
-        if p['id'] == id:
-            return i
-
-
-# Root route (home page)
+# Root route
 @app.get("/")
 async def root():
     return {"message": "welcome to fastapi"}
 
 
-@app.get("/sqlalchemy")
-def test_posts(db: db_dependency):
-    posts =  db.query(models.Post).all()
-    return {"data": posts}
-
-
-# Get all posts from PostgreSQL database
-@app.get("/posts")
+# Get all posts
+@app.get("/posts", response_model=List[schemas.Post])
 async def get_posts(db: db_dependency):
-    # cursor.execute(""" SELECT * FROM posts """)
-    # posts = cursor.fetchall()
-    posts = db.query(models.Post).all()
-    return {"data": posts}
+    return db.query(models.Post).all()
 
 
-# Create a new post in database
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-async def create_post(post: Post , db: db_dependency):
-    # cursor.execute(
-    #     """ INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, 
-    #     (post.title, post.content, post.published)
-    # )
-    # new_post = cursor.fetchone()
-    # conn.commit()
+# Create post
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+async def create_post(post: schemas.PostCreate, db: db_dependency):
 
-    # new_post = models.Post(title=post.title, content=post.content, published=post.published)
-    new_post = models.Post(**post.dict()) # This is a more concise way to create a new Post instance using the data from the Pydantic model
+    new_post = models.Post(**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": new_post}
+
+    return new_post
 
 
-# Get a single post by ID
-@app.get("/posts/{id}")
+# Get single post
+@app.get("/posts/{id}", response_model=schemas.Post)
 async def get_post(id: int, db: db_dependency):
-    # cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id),))
-    # post = cursor.fetchone()
 
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
@@ -125,43 +52,38 @@ async def get_post(id: int, db: db_dependency):
             detail=f"post with id: {id} was not found"
         )
 
-    return {"post_detail": post}
+    return post
 
 
-# Delete a post by ID
+# Delete post
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(id: int, db: db_dependency):
 
-    post = db.query(models.Post).filter(models.Post.id == id)
+    post_query = db.query(models.Post).filter(models.Post.id == id)
 
+    post = post_query.first()
 
-    if post.first() == None:
+    if not post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"post with id: {id} was not found"
         )
 
-    post.delete(synchronize_session=False)
+    post_query.delete(synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-# Update a post by ID
-@app.put("/posts/{id}")
-async def update_post(id: int, updated_post: Post, db: db_dependency):
-    # cursor.execute(
-    #     """ UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING * """, 
-    #     (post.title, post.content, post.published, str(id))
-    # )
-    # updated_post = cursor.fetchone()
-    # conn.commit()
+# Update post
+@app.put("/posts/{id}", response_model=schemas.Post)
+async def update_post(id: int, updated_post: schemas.PostCreate, db: db_dependency):
 
-    post_query= db.query(models.Post).filter(models.Post.id == id)
+    post_query = db.query(models.Post).filter(models.Post.id == id)
 
     post = post_query.first()
 
-    if post == None:
+    if not post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"post with id: {id} was not found"
@@ -170,4 +92,4 @@ async def update_post(id: int, updated_post: Post, db: db_dependency):
     post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()
 
-    return {"data": post_query.first()}
+    return post_query.first()
