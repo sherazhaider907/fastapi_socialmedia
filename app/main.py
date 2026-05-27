@@ -3,8 +3,10 @@ from typing import Annotated, List
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from . import models, schemas
+from . import models, schemas , utils
 from .database import engine, get_db
+
+
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -14,6 +16,8 @@ app = FastAPI()
 
 # DB dependency shortcut
 db_dependency = Annotated[Session, Depends(get_db)]
+
+
 
 
 # Root route
@@ -99,6 +103,11 @@ async def update_post(id: int, updated_post: schemas.PostCreate, db: db_dependen
 # create user
 @app.post("/users", status_code=status.HTTP_201_CREATED,response_model=schemas.UserOut)
 async def create_user(user: schemas.UserCreate, db: db_dependency):
+
+    # Hash the password before saving to database
+    hashed_password = utils.hash(user.password)
+    user.password = hashed_password
+
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
