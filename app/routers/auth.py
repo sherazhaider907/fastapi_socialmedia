@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status, Response
+from fastapi import APIRouter, HTTPException, status, Response , Depends
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 
 from ..dependencies import db_dependency
 
@@ -9,8 +10,8 @@ router = APIRouter(
 )
 
 @router.post("/login")
-async def login(user_credentials: schemas.UserLogin, db: db_dependency):
-    user = db.query(models.User).filter(models.User.email == user_credentials.email).first()
+async def login(db: db_dependency ,user_credentials: OAuth2PasswordRequestForm = Depends()):
+    user = db.query(models.User).filter(models.User.email == user_credentials.username).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid credentials")
 

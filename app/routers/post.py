@@ -1,9 +1,9 @@
 
 from typing import List
 
-from fastapi import Response, status, HTTPException, APIRouter
+from fastapi import Response, status, HTTPException, APIRouter , Depends
 
-from .. import models, schemas
+from .. import models, schemas , oauth2
 
 # DB dependency shortcut
 from ..dependencies import db_dependency
@@ -24,7 +24,7 @@ async def get_posts(db: db_dependency):
 
 # Create post
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-async def create_post(post: schemas.PostCreate, db: db_dependency):
+async def create_post(post: schemas.PostCreate, db: db_dependency, user_id: int = Depends(oauth2.get_current_user)):
 
     new_post = models.Post(**post.dict())
     db.add(new_post)

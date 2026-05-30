@@ -1,7 +1,7 @@
 # Define data model for request body (Post structure)
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-
+from typing import Optional
 
 # post schema
 class PostBase(BaseModel):
@@ -37,3 +37,12 @@ class UserOut(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+# token schema
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    id: Optional[int] = None
