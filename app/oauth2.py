@@ -5,19 +5,23 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from .dependencies import db_dependency
 from . import models
+from .config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 #SECRET_KEY 
 
 # using this  python -c "import secrets; print(secrets.token_hex(32))"
-SECRET_KEY = "9ee639a218fa963d483506621be126e81091ca9ac1a3af7ca9021626ae15cd4e"
+# SECRET_KEY = "9ee639a218fa963d483506621be126e81091ca9ac1a3af7ca9021626ae15cd4e"
+SECRET_KEY = settings.secret_key
 
 #ALGORITHM
-ALGORITHM = "HS256"
+# ALGORITHM = "HS256"
+ALGORITHM = settings.algorithm
 
 #Expire time
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 def create_access_token(data: dict):
     to_encode = data.copy()
