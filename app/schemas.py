@@ -1,5 +1,6 @@
 # Define data model for request body (Post structure)
-from pydantic import BaseModel, EmailStr
+from typing import Annotated
+from pydantic import BaseModel, EmailStr , Field
 from datetime import datetime
 from typing import Optional
 
@@ -48,3 +49,9 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int] = None
+
+
+# vote schema
+class Vote(BaseModel):
+    post_id: int
+    dir: Annotated[int, Field(ge=0, le=1)] # direction of the vote, 0 for downvote and 1 for upvote
