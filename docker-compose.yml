@@ -4,5 +4,14 @@ services: # Define the services that make up your application
     build: . # Build the image from the Dockerfile in the current directory
     ports: # Map port 8000 of the container to port 8000 on the host
       - "8000:8000" # <port on localhost>:<port in container>
-      
-      
+      # env_file:
+      #   - ./.env # Load environment variables from a .env file
+    environment:
+      - DATABASE_HOST=localhost
+      - DATABASE_PORT=5432
+      - DATABASE_PASSWORD=admin
+      - DATABASE_NAME=fastapi
+      - DATABASE_USERNAME=postgres
+      - SECRET_KEY=9ee639a218fa963d483506621be126e81091ca9ac1a3af7ca9021626ae15cd4e
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
