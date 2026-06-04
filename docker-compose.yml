@@ -6,6 +6,8 @@ services: # Define the services that make up your application
       - postgres
     ports: # Map port 8000 of the container to port 8000 on the host
       - "8000:8000" # <port on localhost>:<port in container>
+    volumes:
+      - ./:usr/src/app:ro # Mount the current directory to /usr/src/app in the container
       # env_file:
       #   - ./.env # Load environment variables from a .env file
     environment:
