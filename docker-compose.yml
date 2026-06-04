@@ -1,0 +1,8 @@
+version: '3.8'
+services: # Define the services that make up your application
+  app: # Name of the service
+    build: . # Build the image from the Dockerfile in the current directory
+    ports: # Map port 8000 of the container to port 8000 on the host
+      - "8000:8000" # <port on localhost>:<port in container>
+      
+      
