@@ -13,7 +13,7 @@ router = APIRouter(
 
 # Create vote
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def vote(vote: schemas.Vote, db: db_dependency, current_user: int = Depends(oauth2.get_current_user)):
+async def vote(vote: schemas.Vote, db: db_dependency, response: Response, current_user: int = Depends(oauth2.get_current_user)):
 
     # Check if post exists
     post = db.query(models.Post).filter(models.Post.id == vote.post_id).first()
@@ -38,4 +38,5 @@ async def vote(vote: schemas.Vote, db: db_dependency, current_user: int = Depend
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="vote does not exist")
         vote_query.delete(synchronize_session=False)
         db.commit()
+        response.status_code = status.HTTP_200_OK
         return {"message": "successfully deleted vote"}
