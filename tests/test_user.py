@@ -1,21 +1,12 @@
 import uuid
 from app import schemas
-from .database import client , session
+
 import pytest
 from app.config import settings
 from jose import jwt
 
-@pytest.fixture
-def test_user(client):
-    user_data = {
-        "email": f"{uuid.uuid4()}@example.com",
-        "password": "password123"
-    }
-    response = client.post("/users/", json=user_data)
-    assert response.status_code == 201
-    new_user = response.json()          
-    new_user["password"] = user_data["password"]   
-    return new_user
+
+
 
 
 
@@ -54,3 +45,18 @@ def test_login_user(client, test_user):
     assert id == test_user["id"]
     assert login_response.token_type == "bearer"
     assert response.status_code == 200
+
+@pytest.mark.parametrize("email, password, status_code", [
+    ("nonexistent@example.com", "wrongpassword", 403),  # user doesn't exist
+    (None, "wrongpassword", 403),                        # correct email, wrong password
+])
+def test_incorrect_login(client, test_user, email, password, status_code):
+    response = client.post(
+        "/login",
+        data={
+            "username": email if email else test_user["email"],
+            "password": password
+        }
+    )
+    assert response.status_code == status_code
+    # assert response.json().get("detail") == "Invalid credentials"
