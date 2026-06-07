@@ -98,3 +98,4 @@ def test_vote(authorized_client, test_posts):
         json={"post_id": test_posts[0]["id"], "dir": 1}
     )
     assert response.status_code == 201
+
