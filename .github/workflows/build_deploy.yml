@@ -61,3 +61,5 @@
 #       - name: Run tests
 #         run: |
 #           pytest tests/
+
+# CI pipeline for testing the application on every push and pull request to the main branch. It sets up a PostgreSQL service, installs dependencies, and runs tests using pytest.
