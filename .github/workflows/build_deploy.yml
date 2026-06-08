@@ -81,7 +81,14 @@
 #           push: true
 #           tags: ${{ secrets.DOCKER_USERNAME }}/fastapi:latest
 
+# deploy:
+#   needs: build
+#   runs-on: ubuntu-latest
 
+#   steps:
+#     - name: Deploy to production
+#       run: echo "Deploying to production environment..."
+#       # Add your deployment commands here (e.g., SSH, Kubernetes, etc.)
 
 
 
